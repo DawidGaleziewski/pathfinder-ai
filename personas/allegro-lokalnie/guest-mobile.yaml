@@ -1,0 +1,4 @@
+# SC-008: a new persona from configuration alone, no crawler code change.
+id: guest-mobile
+extends: ["guest.yaml"]
+viewport: { width: 390, height: 844 }
