@@ -1,0 +1,49 @@
+# Allegro Lokalnie: production, read-only guest mapping. See specs/001-crawler-map-mode/contracts/config-schema.md.
+id: allegro-lokalnie
+base_url: https://allegrolokalnie.pl/
+environment: production # required to unlock a run against this address (FR-005)
+# max_action_class omitted: defaults to `read` on production.
+
+# FR-026: production runs are refused by `preflight` until a person fills these in (T072).
+# TODO(T072): review the operator's main Regulamin and API terms, re-check robots.txt, then fill all three.
+compliance:
+  robots_checked_on: null
+  terms_reviewed_on: null
+  terms_reviewed_by: null
+
+scope:
+  allowed_domains: [allegrolokalnie.pl]
+  allowed_paths: ["/*"]
+  external_link_policy: record
+  max_depth: 6
+  max_states: 500
+  max_actions_per_state: 20
+  max_run_time_minutes: 60
+  max_steps: 2000
+
+denylist:
+  - logout
+  - delete
+  - payment
+  - bidding
+  - buy_now
+  - message_or_contact_seller
+  - reveal_seller_contact
+  - path:/oferty/wystaw/* # listing-creation path disallowed by robots (FR-007)
+
+# Placeholder selectors, to be verified against the live site in T059.
+obstacles:
+  - id: cookie_banner
+    selector: "#cookie-consent button[data-accept]"
+  - id: promo_popup
+    selector: ".promo-modal .close"
+
+rate_limit:
+  requests_per_second: 1
+  max_concurrency: 1
+  # TODO(T072): replace the placeholder contact address with the maintainer's real one.
+  user_agent: "PathfinderAI-Crawler/0.1 (+contact@example.com)"
+
+item_view_cap: 25 # FR-024
+item_route_templates:
+  - "/oferta/:id" # placeholder, verify against the live site
