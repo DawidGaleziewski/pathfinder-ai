@@ -91,6 +91,7 @@ const gate = (over: Partial<GateContext> = {}): GateContext => ({
   },
   denylist: ['bidding', 'buy_now', 'logout', 'reveal_seller_contact'],
   rules: builtinRuleSet(),
+  robots: { check: () => ({ state: 'allowed', rule: null }) },
   effectiveMaxActionClass: 'read',
   usage: { depth: 1, states: 0, actionsInState: 0, elapsedMs: 0, steps: 0 },
   ...over,

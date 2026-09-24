@@ -54,6 +54,7 @@ function gateContext(rs: RunState, u: GateContext['usage']): GateContext {
     scope: rs.scope,
     denylist: rs.effective.portal.denylist,
     rules: rs.ruleSet,
+    robots: rs.robots.registry,
     effectiveMaxActionClass: rs.effective.effectiveMaxActionClass,
     usage: u,
   };
@@ -66,14 +67,24 @@ export function navigationPolicy(rs: RunState): (url: string) => Refusal | null 
       { kind: 'navigate', url },
       { ...gateContext(rs, { depth: 0, states: 0, actionsInState: 0, elapsedMs: 0, steps: 0 }) },
     );
-    return d.allowed ? null : { status: d.status, rule: d.rule, reason: d.reason };
+    if (d.allowed) return null;
+    return {
+      status: d.status,
+      rule: d.rule,
+      reason: d.reason,
+      ...(d.policyId ? { policyId: d.policyId } : {}),
+    };
   };
 }
 
 /** Persist a detected block: `stopped_warning`, a decision-log warning, and nothing more (FR-008). Idempotent. */
 export function persistStop(ctx: ServerContext, rs: RunState, warning: string): Promise<void> {
   rs.stopPersisted ??= (async () => {
-    await completeRun(ctx, { run_id: rs.runId, status: 'stopped_warning', warning });
+    await completeRun(
+      ctx,
+      { run_id: rs.runId, status: 'stopped_warning', warning },
+      rs.session.gate.robotsStats(),
+    );
     await ctx.decisions.record({
       run_id: rs.runId,
       kind: 'warning',
@@ -105,7 +116,7 @@ export async function beginStep(
     );
   await throwIfStopped(ctx, rs);
   if (await isBudgetExhausted(ctx, run)) {
-    await completeRun(ctx, { run_id: run.id, status: 'completed' });
+    await completeRun(ctx, { run_id: run.id, status: 'completed' }, rs.session.gate.robotsStats());
     throw new ToolError(
       'RUN_STOPPED',
       'a step, time or state budget is exhausted; the run has completed',
@@ -463,7 +474,10 @@ async function refuse(
     rule: refusal.rule,
     reason: refusal.reason,
     subject_ref: subject,
-    detail: { status: refusal.status },
+    detail: {
+      status: refusal.status,
+      ...(refusal.policyId ? { policy_id: refusal.policyId } : {}),
+    },
   });
   if (stateId) {
     const pending = actionId ? await pendingItemForAction(ctx.db, run.id, actionId) : undefined;

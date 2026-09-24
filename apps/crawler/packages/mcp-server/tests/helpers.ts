@@ -39,6 +39,8 @@ export async function makeCtx(): Promise<ServerContext & { dir: string; opened: 
     logger,
     root: dir,
     dbEnvironment: 'production',
+    // No test reaches the network: robots.txt answers 404 (no rules) unless a test overrides it.
+    fetch: (async () => new Response('', { status: 404 })) as typeof fetch,
     dir,
     opened,
   };

@@ -42,7 +42,8 @@ describe('record schemas', () => {
     expect(State.safeParse({ ...state, confidence: 'sure' }).success).toBe(false);
   });
   it('requires portal_id (FR-026, FR-027)', () => {
-    const { portal_id: _omit, ...noPortal } = state;
+    const noPortal: Partial<typeof state> = { ...state };
+    delete noPortal.portal_id;
     expect(State.safeParse(noPortal).success).toBe(false);
     expect(State.safeParse({ ...state, portal_id: '' }).success).toBe(false);
   });
@@ -144,7 +145,15 @@ describe('portal-agnostic safety additions (R-11)', () => {
     expect(RobotsPolicy.safeParse({ ...policy, outcome: 'maybe' }).success).toBe(false);
     expect(RobotsPolicy.safeParse({ ...policy, truncated: 2 }).success).toBe(false);
     expect(RobotsPolicy.safeParse({ ...policy, evidence_ref: '' }).success).toBe(false);
-    const { final_url: _f, http_status: _h, group_used: _g, crawl_delay_s: _c, content_sha256: _s, ...nullable } = policy;
+    const nullable: Partial<typeof policy> = { ...policy };
+    for (const k of [
+      'final_url',
+      'http_status',
+      'group_used',
+      'crawl_delay_s',
+      'content_sha256',
+    ] as const)
+      delete nullable[k];
     expect(
       RobotsPolicy.safeParse({
         ...nullable,

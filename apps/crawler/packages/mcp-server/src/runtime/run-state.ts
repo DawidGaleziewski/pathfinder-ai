@@ -3,6 +3,7 @@ import { inferRouteTemplates, type RouteTemplater } from '@pathfinder/fingerprin
 import type { EffectiveConfig, Scope } from '@pathfinder/config';
 import { FrontierPolicy, type BrowserSession } from '@pathfinder/crawler';
 import { portalRuleSet, type RuleSet } from '@pathfinder/safety';
+import type { RunRobots } from '../services/robots.js';
 
 /** In-memory, per-run browser-side state. Everything durable lives in the database. */
 export class RunState {
@@ -23,6 +24,7 @@ export class RunState {
     readonly session: BrowserSession,
     readonly effective: EffectiveConfig,
     readonly scope: Scope,
+    readonly robots: RunRobots,
   ) {
     const { portal } = effective;
     this.ruleSet = portalRuleSet(portal);

@@ -12,6 +12,7 @@ import {
   type Decision,
   type RuleSet,
 } from '@pathfinder/safety';
+import type { RobotsCheck } from './robots-registry.js';
 
 export type Proposal =
   /** A server-issued action extracted from the page at `currentUrl`. */
@@ -25,6 +26,8 @@ export interface GateContext {
   denylist: readonly string[];
   /** The run's rule set (`portalRuleSet`), used by the classifier and the denylist. */
   rules: RuleSet;
+  /** The run's robots policies (`RobotsRegistry`); only the synchronous check is used here. */
+  robots: { check(url: string): RobotsCheck };
   /** min(portal, persona) from `assertRunAllowed` / `loadEffectiveConfig`. */
   effectiveMaxActionClass: SafetyClass;
   usage: BudgetUsage;
@@ -47,7 +50,9 @@ function targetUrl(p: Proposal): string | undefined {
 /**
  * The single decision point for every proposed browser action or navigation. Pure: persists nothing
  * (the tools write the frontier item and decision-log entry from a refusal). Order:
- * classifier -> scope -> denylist -> effective ceiling -> budgets; the first failing check refuses.
+ * classifier -> scope -> robots -> denylist -> effective ceiling -> budgets; the first failing check
+ * refuses. A robots verdict of `unknown` (host policy not loaded yet) passes here: the request gate
+ * awaits the policy before any request to that host leaves the browser.
  * There is no code path that executes an action without passing through here (Principle III/V).
  */
 export function decide(proposal: Proposal, ctx: GateContext): GateResult {
@@ -60,6 +65,17 @@ export function decide(proposal: Proposal, ctx: GateContext): GateResult {
   if (url !== undefined) {
     const scope = checkScope(url, ctx.scope);
     if (scope.refusal) return { allowed: false, ...scope.refusal, classification };
+    const robots = ctx.robots.check(url);
+    if (robots.state === 'refused') {
+      return {
+        allowed: false,
+        status: 'robots_disallowed',
+        rule: robots.rule,
+        reason: `robots.txt disallows ${url}`,
+        policyId: robots.policyId,
+        classification,
+      };
+    }
   }
 
   const denied = checkDenylist(ctx.denylist, { url, classification }, ctx.rules);
