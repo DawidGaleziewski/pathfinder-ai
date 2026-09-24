@@ -86,7 +86,7 @@ const ROBOTS = 'https://www.example.pl/robots.txt';
 describe('robots registry: fetching (contracts/robots.md)', () => {
   it('fetches through the limiter with the User-Agent, manual redirects and a timeout', async () => {
     const s = setup({ [ROBOTS]: { status: 200, body: 'User-agent: *\nDisallow: /x\n' } });
-    const p = await s.reg.ensure('https://www.example.pl/page');
+    const p = (await s.reg.ensure('https://www.example.pl/page'))!;
     expect(p.outcome).toBe('rules');
     expect(s.calls).toEqual([{ url: ROBOTS, ua: UA, redirect: 'manual', signal: true }]);
     expect(s.acquired()).toBe(1);
@@ -106,7 +106,7 @@ describe('robots registry: fetching (contracts/robots.md)', () => {
 
   it.each([404, 401, 403, 410, 429])('%i → no_rules (not a block)', async (status) => {
     const s = setup({ [ROBOTS]: { status, body: '<html>blocked</html>' } });
-    const p = await s.reg.ensure('https://www.example.pl/');
+    const p = (await s.reg.ensure('https://www.example.pl/'))!;
     expect(p.outcome).toBe('no_rules');
     expect(s.reg.check('https://www.example.pl/anything')).toEqual({
       state: 'allowed',
@@ -126,7 +126,7 @@ describe('robots registry: fetching (contracts/robots.md)', () => {
     ],
   ])('%s → unreachable, every URL on the host refused', async (_name, reply) => {
     const s = setup({ [ROBOTS]: reply });
-    const p = await s.reg.ensure('https://www.example.pl/');
+    const p = (await s.reg.ensure('https://www.example.pl/'))!;
     expect(p.outcome).toBe('unreachable');
     expect(p.failure).toBeTruthy();
     expect(s.reg.check('https://www.example.pl/')).toMatchObject({
@@ -144,7 +144,7 @@ describe('robots registry: fetching (contracts/robots.md)', () => {
       };
     hops['https://cdn.other.pl/r5'] = { status: 200, body: 'User-agent: *\nDisallow: /x\n' };
     const s = setup(hops);
-    const p = await s.reg.ensure('https://www.example.pl/');
+    const p = (await s.reg.ensure('https://www.example.pl/'))!;
     expect(p.outcome).toBe('rules');
     expect(s.acquired()).toBe(6);
     expect(s.persisted[0]!.redirects).toHaveLength(5);
@@ -157,7 +157,7 @@ describe('robots registry: fetching (contracts/robots.md)', () => {
     for (let i = 1; i <= 6; i++)
       hops[`https://www.example.pl/r${i}`] = { status: 302, location: `/r${i + 1}` };
     const s = setup(hops);
-    const p = await s.reg.ensure('https://www.example.pl/');
+    const p = (await s.reg.ensure('https://www.example.pl/'))!;
     expect(p.outcome).toBe('unreachable');
     expect(p.failure).toContain('redirect');
   });
