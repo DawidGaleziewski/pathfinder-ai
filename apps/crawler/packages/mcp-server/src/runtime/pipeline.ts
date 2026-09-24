@@ -404,7 +404,11 @@ async function processPage(
           rule: s.refusal.rule,
           reason: s.refusal.reason,
           subject_ref: s.frontierId,
-          detail: { status: s.refusal.status, safety_class: s.safetyClass },
+          detail: {
+            status: s.refusal.status,
+            safety_class: s.safetyClass,
+            ...(s.refusal.policyId ? { policy_id: s.refusal.policyId } : {}),
+          },
         });
       }
     } else {

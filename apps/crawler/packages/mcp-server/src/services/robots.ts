@@ -173,7 +173,7 @@ export async function robotsCoverage(
     .selectFrom('decision_log')
     .select((eb) => eb.fn.countAll<number>().as('n'))
     .where('run_id', '=', runId)
-    .where('kind', '=', 'refuse')
+    .where('kind', 'in', ['skip', 'refuse'])
     .where('rule', 'like', 'robots:%')
     .executeTakeFirstOrThrow();
   let blocked = live?.pageRequestsBlocked;

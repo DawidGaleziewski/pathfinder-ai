@@ -64,6 +64,11 @@ export async function startMockPortal(): Promise<MockPortal> {
       res.end(JSON.stringify(o));
     };
     const p = url.pathname;
+    if (p === '/robots.txt') {
+      // Disallows nothing the spec 001 checks visit, so the robots `rules` path runs on every map run.
+      res.setHeader('content-type', 'text/plain');
+      return void res.end('User-agent: *\nDisallow: /admin/\n');
+    }
     if (p === '/')
       return html(layout('Start', '<h1>Witamy</h1><p>Zobacz <a href="/oferty">oferty</a>.</p>'));
     if (p === '/oferty')
