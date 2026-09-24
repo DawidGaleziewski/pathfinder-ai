@@ -27,9 +27,9 @@ pnpm-workspace monorepo under `apps/crawler/`: `apps/crawler/packages/<name>/src
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-- [ ] T001 [P] Save real `robots.txt` fixtures to `apps/crawler/tests/fixtures/robots/`: `uniqa.pl.txt`, `allegrolokalnie.pl.txt`, `wykop.pl.txt`, `pl.wikipedia.org.txt`, `olx.pl.txt` (fetched from `https://<host>/robots.txt`, byte-exact) and `rfc9309-examples.txt` (the examples from RFC 9309 §2.2.2 and §5). Add a `robots/` section to `apps/crawler/tests/fixtures/README.md` with the fetch date and source URL of each file
-- [ ] T002 [P] Create `apps/crawler/tests/fixtures/urls/uniqa-robots-sample.json` for SC-002: 50 URLs taken from uniqa.pl pages (menu, footer, article links), including every `cHash` campaign link found in the menus, each with `{ url, expected: "allow" | "refuse", rule }` decided by a manual reading of `robots/uniqa.pl.txt`. Record in the file header where the URLs were taken from and on what date
-- [ ] T003 [P] Add `data/exports/` to the root `.gitignore` (keep a `data/exports/.gitkeep`), for `portal:export` output (research §9)
+- [X] T001 [P] Save real `robots.txt` fixtures to `apps/crawler/tests/fixtures/robots/`: `uniqa.pl.txt`, `allegrolokalnie.pl.txt`, `wykop.pl.txt`, `pl.wikipedia.org.txt`, `olx.pl.txt` (fetched from `https://<host>/robots.txt`, byte-exact) and `rfc9309-examples.txt` (the examples from RFC 9309 §2.2.2 and §5). Add a `robots/` section to `apps/crawler/tests/fixtures/README.md` with the fetch date and source URL of each file
+- [X] T002 [P] Create `apps/crawler/tests/fixtures/urls/uniqa-robots-sample.json` for SC-002: 50 URLs taken from uniqa.pl pages (menu, footer, article links), including every `cHash` campaign link found in the menus, each with `{ url, expected: "allow" | "refuse", rule }` decided by a manual reading of `robots/uniqa.pl.txt`. Record in the file header where the URLs were taken from and on what date
+- [X] T003 [P] Add `data/exports/` to the root `.gitignore` (keep a `data/exports/.gitkeep`), for `portal:export` output (research §9)
 
 ---
 
