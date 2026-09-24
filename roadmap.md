@@ -2,7 +2,7 @@
 
 Maintained by the `po` agent. Order follows the build order in the constitution. An item is `done`
 only when every task in its range in `specs/001-crawler-map-mode/tasks.md` is `[X]`.
-Status: `todo`, `in progress`, `done`. Last reviewed: 2026-09-23.
+Status: `todo`, `in progress`, `done`. Last reviewed: 2026-09-24.
 
 | ID | Item | Tasks | Status |
 | --- | --- | --- | --- |
@@ -16,6 +16,7 @@ Status: `todo`, `in progress`, `done`. Last reviewed: 2026-09-23.
 | R-08 | US3 Portals and personas as reusable configuration | T066 | done |
 | R-09 | US4 Hand locators to QA | T067–T069 | done |
 | R-10 | Polish and cross-cutting concerns | T070–T074 | in progress |
+| R-11 | Portal-agnostic safety: robots.txt enforcement, generic rule ids, per-portal rules | — (spec pending) | in progress |
 
 ## Notes
 
@@ -31,3 +32,13 @@ Status: `todo`, `in progress`, `done`. Last reviewed: 2026-09-23.
   branch and are now split into one commit per item (see Commits); `po` closes R-07 and R-10 once their open tasks pass.
 - Open in R-07: T059 (placeholder obstacle selectors need a supervised live run). Open in R-10: T072 (manual
   compliance gate), T073 (quickstart on the live portal), T074 (live bypass-attempt run).
+- R-11 spec folder: `specs/002-portal-agnostic-safety` (spec not yet written). Branch
+  `feature/002-r11-portal-agnostic-safety` is stacked on `feature/001-r04-core-crawler-map-mode` (not
+  master), because master (`348fac0`) predates all spec-001 code and R-11 builds on it; R-11 must merge
+  after R-04's branch (i.e. after R-07/R-10 close on that branch).
+- Allegro Lokalnie is on hold for legal reasons (Regulamin Allegro art. 10.10: reuse of Allegro
+  materials "wymaga każdorazowo zgody Allegro.pl"). The live-run tasks of R-07/R-10 (T059, T072, T073,
+  T074) now target `uniqa` (`portals/uniqa/portal.yaml`, `personas/uniqa/guest.yaml`, committed
+  `db05277`) instead of `allegro-lokalnie`. The uniqa live run is blocked on R-11 item (1) — automatic
+  robots.txt enforcement, needed to close the `cHash` denylist gap — plus the T072 manual compliance
+  sign-off for uniqa.
