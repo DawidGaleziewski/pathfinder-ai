@@ -1,0 +1,63 @@
+# UNIQA Polska: production, read-only guest mapping; the practice target chosen 2026-09-24 after
+# Allegro Lokalnie was put on hold (Regulamin Allegro art. 10.10 requires consent for downloading).
+# See specs/001-crawler-map-mode/contracts/config-schema.md.
+id: uniqa
+base_url: https://www.uniqa.pl/
+environment: production # required to unlock a run against this address (FR-005)
+# max_action_class omitted: defaults to `read` on production.
+
+# FR-026: production runs are refused by `preflight` until a person fills these in (T072).
+# Review notes (2026-09-24), for the person signing off:
+# - robots.txt (User-agent: *) disallows *no_cache*, *debug*, /*?id=*, *cHash*, /*.pdf (except
+#   /dokumenty/*.pdf, but not /dokumenty/archiwum/*.pdf) and /quote/ (except /quote/data*, /quote/start*).
+# - "Regulamin korzystania z serwisu www.uniqa.pl" (https://www.uniqa.pl/dokumenty/Regulamin_korzystania_z_serwisu_uniqa_pl.pdf):
+#   no clause on bots or automated access; it forbids further distribution ("dalsze rozpowszechnianie")
+#   of the content without consent. We map structure and do not republish content.
+compliance:
+  robots_checked_on: null
+  terms_reviewed_on: null
+  terms_reviewed_by: null
+
+scope:
+  # www only: form.uniqa.pl (calculators), zgloszenia.uniqa.pl (claims), fundusze.uniqa.pl and the
+  # other subdomains stay external, so they are recorded and not followed.
+  allowed_domains: [www.uniqa.pl]
+  allowed_paths: ["/*"]
+  external_link_policy: record
+  max_depth: 5
+  max_states: 300
+  # Every page carries a mega menu of roughly 250 links, so the per-state cap is higher than Allegro's.
+  max_actions_per_state: 40
+  max_run_time_minutes: 60
+  max_steps: 1500
+
+denylist:
+  - logout
+  - delete
+  - payment
+  - buy_now
+  - path:/logowanie/* # customer login
+  - path:/quote/* # quote flow, disallowed by robots
+  - path:*.pdf # robots disallows PDFs; the /dokumenty/*.pdf exception is not needed for mapping
+  - path:/pomoc-i-obsluga/ubezpieczenia-komunikacyjne/wroc-do-wyliczenia/* # resumes a saved calculation
+  # GAP: robots also disallows *cHash*, /*?id=* and *no_cache*, which live in the query string, but
+  # `path:` globs match the URL path only. Campaign links such as
+  # /formularze-online/?itm_campaign=...&cHash=... appear in the menus. Needs a query-aware denylist
+  # entry before the first live run.
+
+obstacles:
+  # Cookiebot consent dialog; the guest persona declines optional consent, so the handler clicks "Odrzuć".
+  - id: cookie_banner
+    selector: "#CybotCookiebotDialogBodyButtonDecline"
+
+rate_limit:
+  requests_per_second: 1
+  max_concurrency: 1
+  # TODO(T072): replace the placeholder contact address with the maintainer's real one.
+  user_agent: "PathfinderAI-Crawler/0.1 (+contact@example.com)"
+
+item_view_cap: 10 # FR-024: articles share one template per section
+item_route_templates:
+  - "/porady-komunikacja/:slug"
+  - "/porady-nieruchomosci/:slug"
+  - "/porady-podroz/:slug"
