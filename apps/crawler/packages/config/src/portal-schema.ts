@@ -19,15 +19,19 @@ export type Environment = z.infer<typeof Environment>;
 const Slug = z.string().regex(/^[a-z0-9][a-z0-9_-]*$/, 'must be a lowercase slug');
 const PositiveInt = z.number().int().positive();
 
-/** Known rule id or a `path:` glob; unknown free text is rejected, never silently ignored. */
-export const DenylistEntry = z
-  .string()
-  .refine(
-    (v) =>
-      (DENYLIST_RULE_IDS as readonly string[]).includes(v) ||
-      (v.startsWith('path:') && v.length > 'path:'.length),
-    { message: `must be one of ${DENYLIST_RULE_IDS.join(', ')} or a "path:<glob>" entry` },
-  );
+/**
+ * Known rule id, a `path:` glob (URL path only) or a `url:` glob (path plus query string, spec 002
+ * FR-010); unknown free text is rejected, never silently ignored.
+ */
+export const DenylistEntry = z.string().superRefine((v, ctx) => {
+  if ((DENYLIST_RULE_IDS as readonly string[]).includes(v)) return;
+  for (const prefix of ['path:', 'url:'])
+    if (v.startsWith(prefix) && v.length > prefix.length) return;
+  ctx.addIssue({
+    code: 'custom',
+    message: `${JSON.stringify(v)} must be a rule id, "path:<glob>" or "url:<glob>" (rule ids: ${DENYLIST_RULE_IDS.join(', ')})`,
+  });
+});
 
 export const Budgets = z.object({
   max_depth: PositiveInt,

@@ -81,4 +81,21 @@ describe('loadPortal', () => {
     expect(e.file).toBe(t.file);
     expect(e.problems.join()).toContain('robots_page_requests');
   });
+
+  it('accepts url: denylist entries (FR-010)', () => {
+    const yaml = PORTAL_YAML.replace(
+      'denylist: [logout,',
+      'denylist: ["url:*itm_campaign=*", logout,',
+    );
+    expect(load(yaml).run().denylist).toContain('url:*itm_campaign=*');
+  });
+
+  it('rejects an empty url: glob and a mistyped prefix with the contract message', () => {
+    for (const bad of ['"url:"', '"urls:*x*"']) {
+      const yaml = PORTAL_YAML.replace('denylist: [logout,', `denylist: [${bad}, logout,`);
+      const msg = problems(load(yaml).run).problems.join();
+      expect(msg).toContain('denylist.0');
+      expect(msg).toContain('must be a rule id, "path:<glob>" or "url:<glob>"');
+    }
+  });
 });

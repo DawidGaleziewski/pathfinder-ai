@@ -100,14 +100,14 @@ pnpm-workspace monorepo under `apps/crawler/`: `apps/crawler/packages/<name>/src
 
 ### Tests for User Story 2 (write first, must fail)
 
-- [ ] T028 [P] [US2] Add `url:` cases to `apps/crawler/packages/safety/tests/scope-denylist.test.ts`: `url:*itm_campaign=*` matches `pathname + search` and refuses as `denylisted` with rule `url:*itm_campaign=*`; `url:/*?*sessionId=*` matches only the URL carrying the parameter; `path:` entries still ignore the query (FR-010, US2 scenario 2)
-- [ ] T029 [P] [US2] Add to `apps/crawler/packages/config/tests/load-portal.test.ts`: `url:<glob>` loads; `url:` with an empty glob and a typo like `urls:*x*` fail with `denylist[<i>]: "urls:*x*" must be a rule id, "path:<glob>" or "url:<glob>"` (contracts/config-schema.md)
+- [X] T028 [P] [US2] Add `url:` cases to `apps/crawler/packages/safety/tests/scope-denylist.test.ts`: `url:*itm_campaign=*` matches `pathname + search` and refuses as `denylisted` with rule `url:*itm_campaign=*`; `url:/*?*sessionId=*` matches only the URL carrying the parameter; `path:` entries still ignore the query (FR-010, US2 scenario 2)
+- [X] T029 [P] [US2] Add to `apps/crawler/packages/config/tests/load-portal.test.ts`: `url:<glob>` loads; `url:` with an empty glob and a typo like `urls:*x*` fail with `denylist[<i>]: "urls:*x*" must be a rule id, "path:<glob>" or "url:<glob>"` (contracts/config-schema.md)
 
 ### Implementation for User Story 2
 
-- [ ] T030 [US2] Support `url:` in `apps/crawler/packages/safety/src/denylist.ts` using `globToRegExp` from `apps/crawler/packages/safety/src/scope.ts` against `pathname + search` (research §5) (T028)
-- [ ] T031 [US2] Accept `url:<glob>` in the denylist entry schema in `apps/crawler/packages/config/src/portal-schema.ts` with the error text above (T029)
-- [ ] T032 [US2] Add a `url:/*?*sessionId=*` case to `apps/crawler/packages/mcp-server/tests/insurer-run.test.ts`: only the `sessionId` link is skipped as `denylisted` with that rule
+- [X] T030 [US2] Support `url:` in `apps/crawler/packages/safety/src/denylist.ts` using `globToRegExp` from `apps/crawler/packages/safety/src/scope.ts` against `pathname + search` (research §5) (T028)
+- [X] T031 [US2] Accept `url:<glob>` in the denylist entry schema in `apps/crawler/packages/config/src/portal-schema.ts` with the error text above (T029)
+- [X] T032 [US2] Add a `url:/*?*sessionId=*` case to `apps/crawler/packages/mcp-server/tests/insurer-run.test.ts`: only the `sessionId` link is skipped as `denylisted` with that rule
 
 **Checkpoint**: US1 and US2 work independently.
 

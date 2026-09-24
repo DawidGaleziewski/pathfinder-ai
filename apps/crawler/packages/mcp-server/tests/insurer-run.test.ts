@@ -184,3 +184,28 @@ describe.skipIf(!available)('insurer mock: robots.txt (spec 002 US1, SC-001, SC-
     60_000,
   );
 });
+
+describe.skipIf(!available)('insurer mock: url: denylist entries (spec 002 US2)', () => {
+  it('skips only the sessionId link as denylisted with the url: entry', async () => {
+    const { mock, ctx, call, cleanup } = await insurer(
+      {},
+      { denylist: '[logout, delete, payment, "url:/*?*sessionId=*"]' },
+    );
+    try {
+      const runId = await mapPortal(call, 'insurer', mock.origin + '/');
+      expect(mock.requests.filter((r) => r.url.includes('sessionId'))).toEqual([]);
+      expect(mock.hits('/porady/').length).toBeGreaterThan(0); // the plain link is followed
+      const denied = await ctx.db
+        .selectFrom('frontier')
+        .select(['reason', 'action_json'])
+        .where('run_id', '=', runId)
+        .where('status', '=', 'denylisted')
+        .execute();
+      expect(denied.length).toBeGreaterThan(0);
+      expect(denied.every((d) => d.reason!.startsWith('url:/*?*sessionId=*'))).toBe(true);
+      expect(denied.every((d) => d.action_json.includes('sessionId'))).toBe(true);
+    } finally {
+      await cleanup();
+    }
+  }, 120_000);
+});

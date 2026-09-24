@@ -140,3 +140,31 @@ describe('checkDenylist', () => {
     expect(checkDenylist(['payment'], { url: 'https://allegrolokalnie.pl/wyloguj' })).toBeNull();
   });
 });
+
+describe('url: denylist entries (spec 002 FR-010, FR-011)', () => {
+  const base = 'https://www.example.pl';
+  it('matches path plus query and reports the entry as the rule', () => {
+    expect(
+      checkDenylist(['url:*itm_campaign=*'], { url: `${base}/emerytura/?itm_campaign=boks&x=1` }),
+    ).toMatchObject({ status: 'denylisted', rule: 'url:*itm_campaign=*' });
+    expect(checkDenylist(['url:*itm_campaign=*'], { url: `${base}/emerytura/` })).toBeNull();
+  });
+
+  it('refuses only the URL carrying the parameter (US2 independent test)', () => {
+    const list = ['url:/*?*sessionId=*'];
+    expect(checkDenylist(list, { url: `${base}/porady/?sessionId=abc` })).toMatchObject({
+      status: 'denylisted',
+      rule: 'url:/*?*sessionId=*',
+    });
+    expect(checkDenylist(list, { url: `${base}/porady/?a=1&sessionId=abc` })).not.toBeNull();
+    expect(checkDenylist(list, { url: `${base}/porady/` })).toBeNull();
+    expect(checkDenylist(list, { url: `${base}/porady/sessionId=abc` })).toBeNull();
+  });
+
+  it('path: entries keep ignoring the query (US2 scenario 2)', () => {
+    expect(checkDenylist(['path:/porady/'], { url: `${base}/porady/?sessionId=1` })).toMatchObject({
+      rule: 'path:/porady/',
+    });
+    expect(checkDenylist(['path:*sessionId*'], { url: `${base}/porady/?sessionId=1` })).toBeNull();
+  });
+});
