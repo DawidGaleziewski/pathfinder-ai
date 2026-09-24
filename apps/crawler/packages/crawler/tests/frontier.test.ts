@@ -53,6 +53,7 @@ async function addState(d: Awaited<ReturnType<typeof db>>, fp: string, template 
     .insertInto('states')
     .values({
       id,
+      portal_id: 'p',
       fingerprint: fp.repeat(64).slice(0, 64),
       cluster_id: 'c',
       route_template: template,

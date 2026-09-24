@@ -47,6 +47,7 @@ export async function recordState(
         .insertInto('states')
         .values({
           id: stateId,
+          portal_id: run.portal_id,
           fingerprint: input.fingerprint,
           cluster_id: input.cluster_id,
           route_template: input.route_template,

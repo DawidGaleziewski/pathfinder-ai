@@ -62,6 +62,7 @@ async function seed() {
         .insertInto('states')
         .values({
           id,
+          portal_id: 'p',
           fingerprint: fp.repeat(64),
           cluster_id: 'c',
           route_template: tpl,
