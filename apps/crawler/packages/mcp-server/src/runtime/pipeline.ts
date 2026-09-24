@@ -53,6 +53,7 @@ function gateContext(rs: RunState, u: GateContext['usage']): GateContext {
   return {
     scope: rs.scope,
     denylist: rs.effective.portal.denylist,
+    rules: rs.ruleSet,
     effectiveMaxActionClass: rs.effective.effectiveMaxActionClass,
     usage: u,
   };
@@ -267,7 +268,7 @@ async function processPage(
         from_state: a.state_id,
         to_state: state_id,
         action: { role: a.role, accessible_name: a.accessible_name, ...transitionJson },
-        safety_class: classifyAction(descriptorOf(a)).safetyClass,
+        safety_class: classifyAction(descriptorOf(a), rs.ruleSet).safetyClass,
         status: 'executed',
         evidence_ref: evidenceRef,
         confidence: 'observed',
@@ -308,7 +309,7 @@ async function processPage(
 
   // Actions: server-issued ids, stable per (state, role, name, nth) so a revisit reuses them.
   const extracted = extractCandidates(observed.ariaSnapshot, observed.forms);
-  const candidates = classifyCandidates(extracted);
+  const candidates = classifyCandidates(extracted, rs.ruleSet);
   const locatorSets = attachLocators(extracted, observed.testIds);
   const existing = await ctx.db
     .selectFrom('actions')

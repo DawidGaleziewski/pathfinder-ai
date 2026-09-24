@@ -10,6 +10,7 @@ import {
   type BudgetUsage,
   type Classification,
   type Decision,
+  type RuleSet,
 } from '@pathfinder/safety';
 
 export type Proposal =
@@ -22,6 +23,8 @@ export interface GateContext {
   /** Portal scope already narrowed by the persona (`narrowScope`). */
   scope: Scope;
   denylist: readonly string[];
+  /** The run's rule set (`portalRuleSet`), used by the classifier and the denylist. */
+  rules: RuleSet;
   /** min(portal, persona) from `assertRunAllowed` / `loadEffectiveConfig`. */
   effectiveMaxActionClass: SafetyClass;
   usage: BudgetUsage;
@@ -49,7 +52,9 @@ function targetUrl(p: Proposal): string | undefined {
  */
 export function decide(proposal: Proposal, ctx: GateContext): GateResult {
   const classification =
-    proposal.kind === 'act' ? classifyAction(proposal.descriptor) : classifyUrl(proposal.url);
+    proposal.kind === 'act'
+      ? classifyAction(proposal.descriptor, ctx.rules)
+      : classifyUrl(proposal.url, ctx.rules);
   const url = targetUrl(proposal);
 
   if (url !== undefined) {
@@ -57,7 +62,7 @@ export function decide(proposal: Proposal, ctx: GateContext): GateResult {
     if (scope.refusal) return { allowed: false, ...scope.refusal, classification };
   }
 
-  const denied = checkDenylist(ctx.denylist, { url, classification });
+  const denied = checkDenylist(ctx.denylist, { url, classification }, ctx.rules);
   if (denied) return { allowed: false, ...denied, classification };
 
   const { safetyClass } = classification;

@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import { migrateUp, newId, nowIso, openDb, type OpenedDb } from '@pathfinder/core';
+import { builtinRuleSet } from '@pathfinder/safety';
 import { classifyCandidates, extractCandidates } from '../src/action-extractor.js';
 import type { GateContext } from '../src/action-gate.js';
 import {
@@ -88,6 +89,7 @@ const gate = (over: Partial<GateContext> = {}): GateContext => ({
     max_steps: 2000,
   },
   denylist: ['bidding', 'buy_now', 'logout', 'reveal_seller_contact'],
+  rules: builtinRuleSet(),
   effectiveMaxActionClass: 'read',
   usage: { depth: 1, states: 0, actionsInState: 0, elapsedMs: 0, steps: 0 },
   ...over,
@@ -169,7 +171,7 @@ describe('enqueueActions + report', () => {
   ].join('\n');
 
   async function enqueue(d: Awaited<ReturnType<typeof db>>, stateId: string, g = gate()) {
-    const actions = classifyCandidates(extractCandidates(snap)).map((a) => ({
+    const actions = classifyCandidates(extractCandidates(snap), builtinRuleSet()).map((a) => ({
       ...a,
       actionId: newId(),
       actionJson: { role: a.role, accessible_name: a.name },

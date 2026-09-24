@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { builtinRuleSet } from '@pathfinder/safety';
 import { decide, type GateContext } from '../src/action-gate.js';
 
 const ctx = (over: Partial<GateContext> = {}): GateContext => ({
@@ -13,6 +14,7 @@ const ctx = (over: Partial<GateContext> = {}): GateContext => ({
     max_steps: 2000,
   },
   denylist: ['logout', 'payment', 'bidding', 'buy_now', 'path:/oferty/wystaw/*'],
+  rules: builtinRuleSet(),
   effectiveMaxActionClass: 'read',
   usage: { depth: 1, states: 0, actionsInState: 0, elapsedMs: 0, steps: 0 },
   ...over,

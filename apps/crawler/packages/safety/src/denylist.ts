@@ -1,4 +1,4 @@
-import { ACTION_RULES } from './rules.js';
+import { builtinRuleSet, type RuleSet } from './rule-set.js';
 import { matchesGlob } from './scope.js';
 import type { Classification, Refusal } from './types.js';
 
@@ -10,6 +10,7 @@ import type { Classification, Refusal } from './types.js';
 export function checkDenylist(
   denylist: readonly string[],
   target: { url?: string; classification?: Classification },
+  ruleSet: RuleSet = builtinRuleSet(),
 ): Refusal | null {
   const path = target.url ? safePath(target.url) : null;
 
@@ -28,7 +29,7 @@ export function checkDenylist(
     if (target.classification?.rules.includes(entry)) {
       return { status: 'denylisted', rule: entry, reason: `action matches denylist rule ${entry}` };
     }
-    const rule = ACTION_RULES.find((r) => r.id === entry);
+    const rule = ruleSet.get(entry);
     if (rule && path !== null) {
       const norm = path.toLowerCase();
       if (rule.paths.some((p) => p.test(norm))) {
