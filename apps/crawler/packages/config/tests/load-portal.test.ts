@@ -68,4 +68,17 @@ describe('loadPortal', () => {
     expect(problems(load('a: [unclosed').run).problems[0]).toContain('invalid YAML');
     expect(problems(() => loadPortal('/no/such/portal.yaml')).file).toBe('/no/such/portal.yaml');
   });
+
+  it('defaults robots_page_requests to block and accepts allow_and_record (FR-009)', () => {
+    expect(load(PORTAL_YAML).run().robots_page_requests).toBe('block');
+    const allow = load(PORTAL_YAML + 'robots_page_requests: allow_and_record\n').run();
+    expect(allow.robots_page_requests).toBe('allow_and_record');
+  });
+
+  it('rejects any other robots_page_requests value, naming the file and field', () => {
+    const t = load(PORTAL_YAML + 'robots_page_requests: ignore\n');
+    const e = problems(t.run);
+    expect(e.file).toBe(t.file);
+    expect(e.problems.join()).toContain('robots_page_requests');
+  });
 });

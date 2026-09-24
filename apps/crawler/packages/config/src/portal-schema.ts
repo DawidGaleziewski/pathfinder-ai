@@ -84,6 +84,11 @@ export const PortalConfig = z
     item_route_templates: z.array(z.string().min(1)).default([]),
     /** Case-insensitive substrings of a response body that mean the portal is blocking us (FR-008). */
     block_signatures: z.array(z.string().min(1)).default([]),
+    /**
+     * Requests the page's own scripts make to robots-disallowed URLs (FR-009): `block` aborts them,
+     * `allow_and_record` lets them through. Main-frame navigations always obey robots.
+     */
+    robots_page_requests: z.enum(['block', 'allow_and_record']).default('block'),
   })
   .strict()
   .superRefine((p, ctx) => {
