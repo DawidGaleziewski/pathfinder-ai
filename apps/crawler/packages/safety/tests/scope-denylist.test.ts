@@ -7,6 +7,7 @@ import {
   classifyUrl,
   narrowScope,
   builtinRuleSet,
+  extendRuleSet,
 } from '../src/index.js';
 import { BUILTIN_RULE_CLASSES, resolveRuleId } from '@pathfinder/config';
 
@@ -216,5 +217,26 @@ describe('generic rule ids and aliases (spec 002 FR-012, FR-013)', () => {
       .rules.map((r) => r.id)
       .filter((id) => !id.startsWith('mutating:'));
     expect(denylistable.sort()).toEqual(Object.keys(BUILTIN_RULE_CLASSES).sort());
+  });
+});
+
+describe('portal rule ids in the denylist (spec 002 US4 scenario 4)', () => {
+  it('refuses matching actions as denylisted, like a built-in id', () => {
+    const set = extendRuleSet(builtinRuleSet(), [
+      {
+        id: 'renew_policy',
+        class: 'external-side-effect',
+        keywords: ['przedłuż polisę'],
+        paths: ['/przedluzenie/*'],
+      },
+    ]);
+    const classification = classifyAction({ role: 'button', name: 'Przedłuż polisę' }, set);
+    expect(checkDenylist(['renew_policy'], { classification }, set)).toMatchObject({
+      status: 'denylisted',
+      rule: 'renew_policy',
+    });
+    expect(
+      checkDenylist(['renew_policy'], { url: 'https://x.pl/przedluzenie/start' }, set),
+    ).toMatchObject({ status: 'denylisted', rule: 'renew_policy' });
   });
 });

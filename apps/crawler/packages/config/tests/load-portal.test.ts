@@ -98,4 +98,81 @@ describe('loadPortal', () => {
       expect(msg).toContain('must be a rule id, "path:<glob>" or "url:<glob>"');
     }
   });
+
+  describe('action_rules (spec 002 FR-015 to FR-017, SC-006)', () => {
+    const withRules = (rules: string, denylist = 'denylist: [logout,') =>
+      PORTAL_YAML.replace('denylist: [logout,', denylist) + `action_rules:\n${rules}`;
+
+    it('loads new rules and extensions of built-in rules; the denylist may list a portal rule id', () => {
+      const p = load(
+        withRules(
+          '  - { id: renew_policy, class: external-side-effect, keywords: ["przedłuż polisę"], paths: ["/przedluzenie/*"] }\n  - { id: purchase, keywords: ["jetzt kaufen"] }\n',
+          'denylist: [renew_policy, logout,',
+        ),
+      ).run();
+      expect(p.action_rules.map((r) => r.id)).toEqual(['renew_policy', 'purchase']);
+      expect(p.denylist).toContain('renew_policy');
+    });
+
+    it.each([
+      ['class read', '  - { id: my_rule, class: read, keywords: [x] }\n', 'action_rules.0', 'read'],
+      [
+        'a lowered built-in class',
+        '  - { id: purchase, class: mutating, keywords: [x] }\n',
+        'action_rules.0',
+        'class "mutating" is lower than built-in "purchase" (external-side-effect)',
+      ],
+      [
+        'an alias id',
+        '  - { id: buy_now, keywords: [x] }\n',
+        'action_rules.0.id',
+        '"buy_now" is an alias of "purchase"; extend "purchase" instead',
+      ],
+      ['a new id without class', '  - { id: my_rule, keywords: [x] }\n', 'action_rules.0', 'class'],
+      [
+        'no keywords and no paths',
+        '  - { id: my_rule, class: mutating }\n',
+        'action_rules.0',
+        'needs keywords or paths',
+      ],
+      [
+        'a duplicate id',
+        '  - { id: my_rule, class: mutating, keywords: [x] }\n  - { id: my_rule, class: mutating, keywords: [y] }\n',
+        'action_rules.1.id',
+        'duplicate',
+      ],
+      [
+        'a non-slug id',
+        '  - { id: "My Rule", class: mutating, keywords: [x] }\n',
+        'action_rules.0.id',
+        'slug',
+      ],
+      [
+        'an empty keyword',
+        '  - { id: my_rule, class: mutating, keywords: [""] }\n',
+        'action_rules.0.keywords',
+        '',
+      ],
+      [
+        'an unknown field',
+        '  - { id: my_rule, class: mutating, keywords: [x], regex: "a.*" }\n',
+        'action_rules.0',
+        'regex',
+      ],
+    ])('rejects %s, naming the file and the rule', (_name, rules, where, text) => {
+      const t = load(withRules(rules));
+      const e = problems(t.run);
+      expect(e.file).toBe(t.file);
+      const msg = e.problems.join('\n');
+      expect(msg).toContain(where);
+      expect(msg).toContain(text);
+    });
+
+    it('rejects a denylist id that is neither built-in nor declared in action_rules', () => {
+      const e = problems(
+        load(PORTAL_YAML.replace('denylist: [logout,', 'denylist: [renew_policy, logout,')).run,
+      );
+      expect(e.problems.join()).toContain('denylist.0');
+    });
+  });
 });

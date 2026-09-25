@@ -60,17 +60,27 @@ describe.skipIf(!available)('portal workspaces (spec 002 US5, SC-008, SC-009)', 
     const h = await startHarness({
       'portals/shop/portal.yaml': portalYaml('shop', shop.origin, '#cookie button.accept'),
       'personas/shop/guest.yaml': PERSONA,
-      'portals/insurer/portal.yaml': portalYaml(
-        'insurer',
-        insurer.origin,
-        '#CybotCookiebotDialogBodyButtonDecline',
-      ),
+      'portals/insurer/portal.yaml':
+        portalYaml('insurer', insurer.origin, '#CybotCookiebotDialogBodyButtonDecline') +
+        'action_rules:\n  - { id: renew_policy, class: external-side-effect, keywords: ["przedłuż polisę"] }\n',
       'personas/insurer/guest.yaml': PERSONA,
     });
     const { ctx, call, runtime } = h;
     try {
-      await mapPortal(call, 'shop', shop.origin + '/');
+      const shopRun = await mapPortal(call, 'shop', shop.origin + '/');
       await mapPortal(call, 'insurer', insurer.origin + '/');
+      // a portal's own rules apply only to its runs (spec 002 FR-019)
+      const shopSnap = JSON.parse(
+        (
+          await ctx.db
+            .selectFrom('runs')
+            .select('config_snapshot')
+            .where('id', '=', shopRun)
+            .executeTakeFirstOrThrow()
+        ).config_snapshot,
+      ) as { rule_set: { id: string; origin: string }[] };
+      expect(shopSnap.rule_set.every((r) => r.origin === 'builtin')).toBe(true);
+      expect(shopSnap.rule_set.map((r) => r.id)).not.toContain('renew_policy');
 
       // identical page on both portals: two states, one per portal, never merged (SC-009)
       const cookieRun = async (portal: string, origin: string) => {
