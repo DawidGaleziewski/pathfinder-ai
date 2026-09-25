@@ -33,6 +33,8 @@ export async function recordState(
     const existing = await trx
       .selectFrom('states')
       .select('id')
+      // State identity is per portal: an identical page on another portal is another state (FR-027).
+      .where('portal_id', '=', run.portal_id)
       .where('fingerprint', '=', input.fingerprint)
       .executeTakeFirst();
     let stateId: string;

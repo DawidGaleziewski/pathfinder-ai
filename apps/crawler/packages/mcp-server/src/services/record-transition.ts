@@ -116,8 +116,13 @@ export async function recordTransition(
       .selectFrom('states')
       .select('id')
       .where('id', '=', id)
+      .where('portal_id', '=', run.portal_id)
       .executeTakeFirst();
-    if (!s) throw new ToolError('UNKNOWN_REF', `${field} ${id} does not exist`);
+    if (!s)
+      throw new ToolError(
+        'UNKNOWN_REF',
+        `${field} ${id} is not a state of portal ${run.portal_id}`,
+      );
   }
 
   const id = newId();

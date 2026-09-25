@@ -85,11 +85,12 @@ export function createBrowserRuntime(opts: BrowserRuntimeOptions = {}): Runtime 
       const rs = new RunState(run.id, session, approved.effective, approved.scope, robots);
       holder.rs = rs;
 
-      // Clusters are global: rebuild the fingerprint index from every recorded state's masked snapshot, in
-      // creation order, so cluster ids stay consistent across runs and restarts.
+      // Clusters are per portal (spec 002 FR-027): rebuild the fingerprint index from this portal's
+      // recorded states only, in creation order, so cluster ids stay consistent across its runs.
       const all = await ctx.db
         .selectFrom('states')
         .select(['route_template', 'evidence_ref'])
+        .where('portal_id', '=', run.portal_id)
         .orderBy('created_at')
         .orderBy('id')
         .execute();

@@ -53,6 +53,7 @@ export async function seedRun(
     status: 'running' | 'completed' | 'stopped_warning' | 'interrupted';
     warning: string | null;
     scope: object;
+    portal: string;
   }> = {},
 ): Promise<string> {
   const id = newId();
@@ -60,7 +61,7 @@ export async function seedRun(
     .insertInto('runs')
     .values({
       id,
-      portal_id: 'shop',
+      portal_id: over.portal ?? 'shop',
       persona_id: 'guest',
       mode: 'map',
       environment: over.environment ?? 'production',
