@@ -1,8 +1,8 @@
 # Roadmap
 
 Maintained by the `po` agent. Order follows the build order in the constitution. An item is `done`
-only when every task in its range in `specs/001-crawler-map-mode/tasks.md` is `[X]`.
-Status: `todo`, `in progress`, `done`. Last reviewed: 2026-09-24.
+only when every task in its range in its linked spec's `tasks.md` is `[X]`.
+Status: `todo`, `in progress`, `done`. Last reviewed: 2026-09-25.
 
 | ID | Item | Tasks | Status |
 | --- | --- | --- | --- |
@@ -16,7 +16,7 @@ Status: `todo`, `in progress`, `done`. Last reviewed: 2026-09-24.
 | R-08 | US3 Portals and personas as reusable configuration | T066 | done |
 | R-09 | US4 Hand locators to QA | T067–T069 | done |
 | R-10 | Polish and cross-cutting concerns | T070–T074 | in progress |
-| R-11 | Portal-agnostic safety: robots.txt enforcement, generic rule ids, per-portal rules | — (spec pending) | in progress |
+| R-11 | Portal-agnostic safety and portal workspaces: robots.txt enforcement, generic rule ids, per-portal rules, per-portal data | `specs/002-portal-agnostic-safety` T001–T065 | in progress |
 
 ## Notes
 
@@ -28,17 +28,25 @@ Status: `todo`, `in progress`, `done`. Last reviewed: 2026-09-24.
 - R-06 is built before R-07 (safety first, Principle V); R-04 and R-05 block both.
 - Commits: R-02 `02e17b7`, R-03 `b1639fc` and `348fac0`, R-04 `5633dc4`, R-05 `17f1187`, R-06 `eee48a9`,
   R-07 `dfe3f40` and `23c8a9b` (open), R-08 `412ed19`, R-09 `d4907a4`, R-10 partial `6f1b0d8` (open), deps `59807cb`.
-- R-04 branch: `feature/001-r04-core-crawler-map-mode`. R-05 to R-09 and most of R-10 were also built on this
-  branch and are now split into one commit per item (see Commits); `po` closes R-07 and R-10 once their open tasks pass.
+  None of these hashes exist on `master` any more: the `feature/001-r04-core-crawler-map-mode` branch
+  they were made on was squash-merged into `master` as a single commit, `2799c96` ("docs(roadmap): start
+  R-04, record R-03 as out-of-spec work"). Kept here only as the historical record of when each item
+  landed; use `2799c96` to find the code on `master`.
+- R-04 branch: `feature/001-r04-core-crawler-map-mode` (squash-merged into `master` as `2799c96`, see
+  above). R-05 to R-09 and most of R-10 were also built on this branch and are now split into one commit
+  per item (see Commits); `po` closes R-07 and R-10 once their open tasks pass.
 - Open in R-07: T059 (placeholder obstacle selectors need a supervised live run). Open in R-10: T072 (manual
   compliance gate), T073 (quickstart on the live portal), T074 (live bypass-attempt run).
-- R-11 spec folder: `specs/002-portal-agnostic-safety` (spec not yet written). Branch
-  `feature/002-r11-portal-agnostic-safety` is stacked on `feature/001-r04-core-crawler-map-mode` (not
-  master), because master (`348fac0`) predates all spec-001 code and R-11 builds on it; R-11 must merge
-  after R-04's branch (i.e. after R-07/R-10 close on that branch).
+- R-11 spec folder: `specs/002-portal-agnostic-safety` (spec, plan and tasks written; T001-T061,
+  T063-T064 done). Branch `feature/002-r11-portal-agnostic-safety` now sits directly on `master`
+  (which already contains the squashed spec 001 code as `2799c96`), not on
+  `feature/001-r04-core-crawler-map-mode` as originally planned — that branch closed and merged first.
+  Implementation is complete on the branch (full suite, typecheck and lint green); the branch is not yet
+  merged to `master` and R-11 is not `done` because the only remaining task is the live `uniqa` run,
+  which needs the T072 manual compliance sign-off below.
 - Allegro Lokalnie is on hold for legal reasons (Regulamin Allegro art. 10.10: reuse of Allegro
   materials "wymaga każdorazowo zgody Allegro.pl"). The live-run tasks of R-07/R-10 (T059, T072, T073,
-  T074) now target `uniqa` (`portals/uniqa/portal.yaml`, `personas/uniqa/guest.yaml`, committed
-  `db05277`) instead of `allegro-lokalnie`. The uniqa live run is blocked on R-11 item (1) — automatic
-  robots.txt enforcement, needed to close the `cHash` denylist gap — plus the T072 manual compliance
+  T074) now target `uniqa` (`portals/uniqa/portal.yaml`, `personas/uniqa/guest.yaml`) instead of
+  `allegro-lokalnie`. R-11's robots.txt enforcement (spec 002 US1), needed to close the `cHash` denylist
+  gap, is done on the branch; the uniqa live run is now blocked only on the T072 manual compliance
   sign-off for uniqa.

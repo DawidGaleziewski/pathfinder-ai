@@ -109,14 +109,19 @@ apps/crawler/
 │   ├── safety/src/
 │   │   ├── robots.ts            # NEW: parseRobots, robotsVerdict, productToken (pure)
 │   │   ├── rules.ts             # generic ids, ALIASES, builtinRuleSet
-│   │   ├── rule-set.ts          # NEW: RuleSet, extendRuleSet, resolveRuleId
+│   │   ├── rule-set.ts          # NEW: RuleSet, builtinRuleSet, extendRuleSet, portalRuleSet
 │   │   ├── classifier.ts        # classifyAction/classifyUrl take a RuleSet
 │   │   ├── denylist.ts          # url: entries, alias resolution, RuleSet
 │   │   └── scope.ts             # unchanged matcher reused for url:
 │   ├── config/src/
 │   │   ├── portal-schema.ts     # action_rules, robots_page_requests, url:, alias ids
+│   │   ├── rule-ids.ts          # NEW: builtin id/class table, RULE_ALIASES, resolveRuleId
+│   │   │                        #   (lives here, not in safety/rule-set.ts, because config
+│   │   │                        #   cannot import safety — As built, T008/T036)
 │   │   ├── load-persona.ts      # fence option
-│   │   └── effective.ts         # builds the portal RuleSet into EffectiveConfig
+│   │   └── effective.ts         # EffectiveConfig does not gain a ruleSet or robots field (config
+│   │                            #   cannot import safety); the run's RuleSet is built by safety's
+│   │                            #   portalRuleSet(portal) and held on RunState (As built, T008)
 │   ├── core/src/                # Kysely types for new tables/columns
 │   ├── crawler/src/
 │   │   ├── robots-registry.ts   # NEW: per-run policies per host, fetch via limiter
