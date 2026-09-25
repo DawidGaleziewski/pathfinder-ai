@@ -7,6 +7,7 @@ import type { ServerContext } from '../context.js';
 import { ToolError, parseInput } from '../errors.js';
 import { getRun, type RunRow } from './common.js';
 import { scopeOf } from './run-budget.js';
+import { portalRuleSet, ruleSetSummary } from '@pathfinder/safety';
 import { createRunRobots, robotsSnapshot, type RunRobots } from './robots.js';
 
 const StartRunInput = z
@@ -141,6 +142,7 @@ export async function startRunRecord(
         effective_max_action_class: effectiveMaxActionClass,
         scope: pre.scope,
         robots: robotsSnapshot(robots),
+        rule_set: ruleSetSummary(portalRuleSet(portal)),
       }),
       status: 'running',
       warning: null,

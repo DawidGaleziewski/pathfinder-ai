@@ -200,7 +200,7 @@ describe.skipIf(!available)('map run against the mock portal', () => {
       const r = await call('act', { run_id: runId, action_id: bid.action_id });
       expect(r).toMatchObject({
         isError: true,
-        body: { error: { code: 'ACTION_REFUSED', rule: 'bidding' } },
+        body: { error: { code: 'ACTION_REFUSED', rule: 'bidding→purchase' } },
       });
     } finally {
       await cleanup();

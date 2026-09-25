@@ -224,7 +224,7 @@ describe('enqueueActions + report', () => {
         .filter((x) => x.status === 'denylisted')
         .map((x) => x.reason?.split(':')[0])
         .sort(),
-    ).toEqual(['bidding', 'logout', 'reveal_seller_contact']);
+    ).toEqual(['bidding→purchase', 'logout', 'reveal_seller_contact→reveal_contact']);
     expect(rows.find((x) => x.status === 'out_of_scope')!.reason).toContain('scope:domain');
     expect(rows.find((x) => x.status === 'skipped_unsafe')!.reason).toContain('ceiling:read');
     expect(rows.every((x) => x.status === 'pending' || x.status === 'done' || !!x.reason)).toBe(

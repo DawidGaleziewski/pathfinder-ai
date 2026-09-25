@@ -236,6 +236,12 @@ describe('start_run: robots.txt (FR-001, FR-004 to FR-006)', () => {
       product_token: 'PathfinderAI-Crawler',
       truncated: 0,
     });
+    expect(JSON.parse(run!.config_snapshot).rule_set).toEqual(
+      expect.arrayContaining([
+        { id: 'purchase', class: 'external-side-effect', origin: 'builtin' },
+        { id: 'submit_request', class: 'external-side-effect', origin: 'builtin' },
+      ]),
+    );
     expect(snap.robots).toEqual({
       product_token: 'PathfinderAI-Crawler',
       page_requests: 'block',

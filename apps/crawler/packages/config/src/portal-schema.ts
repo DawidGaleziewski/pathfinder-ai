@@ -1,17 +1,7 @@
 import { z } from 'zod';
 import { SafetyClass } from '@pathfinder/core';
 
-/** Built-in denylist rule ids; each carries keyword and PL/EN path patterns in `safety`. */
-export const DENYLIST_RULE_IDS = [
-  'logout',
-  'delete',
-  'payment',
-  'bidding',
-  'buy_now',
-  'message_or_contact_seller',
-  'reveal_seller_contact',
-] as const;
-export type DenylistRuleId = (typeof DENYLIST_RULE_IDS)[number];
+import { DENYLIST_RULE_IDS } from './rule-ids.js';
 
 export const Environment = z.enum(['production', 'staging', 'sandbox']);
 export type Environment = z.infer<typeof Environment>;
@@ -24,7 +14,7 @@ const PositiveInt = z.number().int().positive();
  * FR-010); unknown free text is rejected, never silently ignored.
  */
 export const DenylistEntry = z.string().superRefine((v, ctx) => {
-  if ((DENYLIST_RULE_IDS as readonly string[]).includes(v)) return;
+  if (DENYLIST_RULE_IDS.includes(v)) return;
   for (const prefix of ['path:', 'url:'])
     if (v.startsWith(prefix) && v.length > prefix.length) return;
   ctx.addIssue({

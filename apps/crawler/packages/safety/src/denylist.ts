@@ -1,3 +1,4 @@
+import { resolveRuleId } from '@pathfinder/config';
 import { builtinRuleSet, type RuleSet } from './rule-set.js';
 import { matchesGlob } from './scope.js';
 import type { Classification, Refusal } from './types.js';
@@ -38,17 +39,20 @@ export function checkDenylist(
       }
       continue;
     }
-    if (target.classification?.rules.includes(entry)) {
-      return { status: 'denylisted', rule: entry, reason: `action matches denylist rule ${entry}` };
+    // An alias (`buy_now`) acts as its generic id and is reported as `buy_now→purchase` (FR-013).
+    const { id, alias } = resolveRuleId(entry);
+    const shown = alias === undefined ? id : `${alias}→${id}`;
+    if (target.classification?.rules.includes(id)) {
+      return { status: 'denylisted', rule: shown, reason: `action matches denylist rule ${shown}` };
     }
-    const rule = ruleSet.get(entry);
+    const rule = ruleSet.get(id);
     if (rule && path !== null) {
       const norm = path.toLowerCase();
       if (rule.paths.some((p) => p.test(norm))) {
         return {
           status: 'denylisted',
-          rule: entry,
-          reason: `path ${path} matches denylist rule ${entry}`,
+          rule: shown,
+          reason: `path ${path} matches denylist rule ${shown}`,
         };
       }
     }

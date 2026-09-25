@@ -53,7 +53,7 @@ describe('action gate', () => {
       { kind: 'act', currentUrl: here, descriptor: { role: 'button', name: 'Kup teraz' } },
       ctx(),
     );
-    expect(r).toMatchObject({ allowed: false, status: 'denylisted', rule: 'buy_now' });
+    expect(r).toMatchObject({ allowed: false, status: 'denylisted', rule: 'bidding→purchase' });
   });
 
   it('refuses a mutating action above the ceiling as skipped_unsafe', () => {

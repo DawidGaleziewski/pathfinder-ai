@@ -38,7 +38,13 @@ describe('migrations', () => {
     expect(migrateUp(opened.raw, MIGRATIONS)).toEqual([]);
     expect(appliedVersions(opened.raw)).toEqual(['0001', '0002']);
     expect(tables(opened)).toEqual(
-      expect.arrayContaining(['states', 'frontier', 'decision_log', 'robots_policies', 'portal_data_log']),
+      expect.arrayContaining([
+        'states',
+        'frontier',
+        'decision_log',
+        'robots_policies',
+        'portal_data_log',
+      ]),
     );
     expect(migrateDown(opened.raw, MIGRATIONS)).toBe('0002');
     expect(migrateDown(opened.raw, MIGRATIONS)).toBe('0001');

@@ -1,7 +1,10 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { canLaunchBrowser } from '@pathfinder/crawler';
-import { mapPortal, startHarness, type Body } from './harness.js';
+import { auditPii } from '@pathfinder/core';
+import { buildFrontierReport, canLaunchBrowser, renderReport } from '@pathfinder/crawler';
+import { interruptStaleRuns } from '../src/index.js';
+import { crawl, mapPortal, startHarness, type Body } from './harness.js';
 import { startMockInsurer, type MockInsurerOptions } from './mock-insurer.js';
 import type { MockPortal } from './mock-portal.js';
 
@@ -24,7 +27,7 @@ scope:
   max_actions_per_state: 40
   max_run_time_minutes: 5
   max_steps: 60
-denylist: ${o.denylist ?? '[logout, delete, payment]'}
+denylist: ${o.denylist ?? '[logout, delete, payment, purchase, submit_request, contact_or_message, reveal_contact]'}
 obstacles:
   - { id: cookie_dialog, selector: "#CybotCookiebotDialogBodyButtonDecline" }
 rate_limit: { requests_per_second: 20, max_concurrency: 1, user_agent: "PathfinderAI-Crawler/0.1 (+ops@corp.pl)" }
@@ -189,7 +192,7 @@ describe.skipIf(!available)('insurer mock: url: denylist entries (spec 002 US2)'
   it('skips only the sessionId link as denylisted with the url: entry', async () => {
     const { mock, ctx, call, cleanup } = await insurer(
       {},
-      { denylist: '[logout, delete, payment, "url:/*?*sessionId=*"]' },
+      { denylist: '[logout, delete, payment, purchase, submit_request, "url:/*?*sessionId=*"]' },
     );
     try {
       const runId = await mapPortal(call, 'insurer', mock.origin + '/');
@@ -201,9 +204,141 @@ describe.skipIf(!available)('insurer mock: url: denylist entries (spec 002 US2)'
         .where('run_id', '=', runId)
         .where('status', '=', 'denylisted')
         .execute();
-      expect(denied.length).toBeGreaterThan(0);
-      expect(denied.every((d) => d.reason!.startsWith('url:/*?*sessionId=*'))).toBe(true);
-      expect(denied.every((d) => d.action_json.includes('sessionId'))).toBe(true);
+      const bySession = denied.filter((d) => d.action_json.includes('sessionId'));
+      expect(bySession.length).toBeGreaterThan(0);
+      expect(bySession.every((d) => d.reason!.startsWith('url:/*?*sessionId=*'))).toBe(true);
+      expect(denied.filter((d) => d.reason!.startsWith('url:')).length).toBe(bySession.length);
+    } finally {
+      await cleanup();
+    }
+  }, 120_000);
+});
+
+describe.skipIf(!available)('insurer mock: configuration only, generic ids (spec 002 US3)', () => {
+  it('refuses purchase and submit_request controls, records the forms and never submits them', async () => {
+    const { mock, ctx, call, cleanup } = await insurer();
+    try {
+      const runId = (await call('start_run', { portal_id: 'insurer', persona_id: 'guest' })).body
+        .run_id as string;
+      const page = await call('navigate', {
+        run_id: runId,
+        url: mock.origin + '/ubezpieczenia/dom',
+      });
+      const byName = Object.fromEntries(
+        (page.body.actions as Body[]).map((a) => [a.accessible_name, a]),
+      );
+      expect(byName['Kup polisę']).toMatchObject({
+        allowed: false,
+        skip_reason: expect.stringMatching(/^purchase: /),
+      });
+      expect(byName['Wyślij zapytanie']).toMatchObject({
+        allowed: false,
+        skip_reason: expect.stringMatching(/^submit_request: /),
+      });
+      await crawl(call, runId, 300);
+      expect((await call('finish_run', { run_id: runId })).body.status).toBe('completed');
+
+      const forms = await ctx.db.selectFrom('forms').select('fields_json').execute();
+      const fields = forms.flatMap((f) => (JSON.parse(f.fields_json) as Body[]).map((x) => x.name));
+      expect(fields).toEqual(expect.arrayContaining(['email', 'vehicle', 'year']));
+      expect(mock.requests.filter((r) => r.method !== 'GET')).toEqual([]);
+      expect(mock.hits('/zapytanie')).toEqual([]);
+    } finally {
+      await cleanup();
+    }
+  }, 120_000);
+});
+
+describe.skipIf(!available)('insurer mock: spec 001 end-to-end checks (spec 002 FR-020)', () => {
+  it('maps read-only with evidence, confidence, locators and a frontier report; no PII stored', async () => {
+    const { mock, ctx, call, cleanup } = await insurer();
+    try {
+      const runId = await mapPortal(call, 'insurer', mock.origin + '/');
+      const states = await ctx.db.selectFrom('states').selectAll().execute();
+      const edges = await ctx.db.selectFrom('edges').selectAll().execute();
+      expect(states.length).toBeGreaterThan(3);
+      for (const r of [...states, ...edges]) {
+        expect(r.evidence_ref).toMatch(/^[0-9a-f]{64}\.yaml$/);
+        expect(r.confidence).toBeTruthy();
+      }
+      expect(
+        edges.filter((e) => e.status === 'executed').every((e) => e.safety_class === 'read'),
+      ).toBe(true);
+      const files = readdirSync(join(ctx.dir, 'evidence'));
+      for (const e of edges) {
+        const a = JSON.parse(e.action_json) as Body;
+        expect(a.locators.length).toBeGreaterThan(0);
+        expect(a.locators[0].kind).toBe('role');
+        expect(files).toContain(a.snapshot_ref);
+      }
+      const report = renderReport(await buildFrontierReport(ctx.db, runId));
+      expect(report).toContain('disallowed by robots.txt');
+      expect(report).toContain('denylisted');
+      const { findings } = await auditPii({ evidenceDir: join(ctx.dir, 'evidence'), db: ctx.db });
+      expect(findings).toEqual([]);
+    } finally {
+      await cleanup();
+    }
+  }, 120_000);
+
+  it('stops on a 403 with zero further requests and no way to resume', async () => {
+    const { mock, ctx, call, cleanup } = await insurer();
+    try {
+      const runId = (await call('start_run', { portal_id: 'insurer', persona_id: 'guest' })).body
+        .run_id as string;
+      const home = await call('navigate', { run_id: runId, url: mock.origin + '/' });
+      const blocked = await call('navigate', { run_id: runId, url: mock.origin + '/blocked' });
+      expect(blocked.body.error.code).toBe('RUN_STOPPED');
+      const run = await ctx.db.selectFrom('runs').selectAll().executeTakeFirstOrThrow();
+      expect(run.status).toBe('stopped_warning');
+      const count = mock.requests.length;
+      expect(
+        (await call('act', { run_id: runId, action_id: home.body.actions[0].action_id })).body.error
+          .code,
+      ).toBe('RUN_STOPPED');
+      expect(
+        (
+          await call('start_run', {
+            portal_id: 'insurer',
+            persona_id: 'guest',
+            resume_run_id: runId,
+          })
+        ).body.error.code,
+      ).toBe('RUN_NOT_RESUMABLE');
+      expect(mock.requests.length).toBe(count);
+    } finally {
+      await cleanup();
+    }
+  }, 60_000);
+
+  it('resumes an interrupted run without duplicating states or edges', async () => {
+    const { mock, ctx, call, runtime, cleanup } = await insurer();
+    try {
+      const runId = (await call('start_run', { portal_id: 'insurer', persona_id: 'guest' })).body
+        .run_id as string;
+      await call('navigate', { run_id: runId, url: mock.origin + '/' });
+      for (let i = 0; i < 3; i++) {
+        const next = await call('get_next_frontier_item', { run_id: runId });
+        await call('act', { run_id: runId, action_id: next.body.item.action_id });
+      }
+      const edgesBefore = (await ctx.db.selectFrom('edges').select('id').execute()).length;
+      await runtime.closeAll();
+      expect(await interruptStaleRuns(ctx)).toEqual([runId]);
+      const resumed = await call('start_run', {
+        portal_id: 'insurer',
+        persona_id: 'guest',
+        resume_run_id: runId,
+      });
+      expect(resumed.body).toMatchObject({ run_id: runId, resumed: true });
+      expect(mock.hits('/robots.txt').length).toBe(2); // fetched again on resume
+      await crawl(call, runId, 300);
+      expect((await call('finish_run', { run_id: runId })).body.status).toBe('completed');
+      const edges = await ctx.db.selectFrom('edges').selectAll().execute();
+      const keys = edges.map((e) => `${e.from_state}|${e.action_json}`);
+      expect(new Set(keys).size).toBe(keys.length);
+      expect(edges.length).toBeGreaterThan(edgesBefore);
+      const states = await ctx.db.selectFrom('states').selectAll().execute();
+      expect(new Set(states.map((s) => s.fingerprint)).size).toBe(states.length);
     } finally {
       await cleanup();
     }

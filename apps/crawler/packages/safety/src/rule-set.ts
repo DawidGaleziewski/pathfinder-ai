@@ -27,3 +27,8 @@ export function portalRuleSet(portal: PortalConfig): RuleSet {
   void portal; // portal `action_rules` arrive with User Story 4
   return BUILTIN;
 }
+
+/** The resolved rules of a run, for its config snapshot: a run can be re-explained without the portal file. */
+export function ruleSetSummary(set: RuleSet): { id: string; class: string; origin: string }[] {
+  return set.rules.map((r) => ({ id: r.id, class: r.safetyClass, origin: r.origin ?? 'builtin' }));
+}
