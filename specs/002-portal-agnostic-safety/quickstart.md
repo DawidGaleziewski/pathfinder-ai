@@ -75,3 +75,18 @@ Ask the main session: "Use the crawler subagent to map `uniqa` as `guest`".
 - **Expect**: the run's robots policy for `www.uniqa.pl` has `outcome = rules`; no request in the
   run touches a `robots.txt`-disallowed URL (checked from the decision log and the network
   shapes); `cHash` menu links appear in the frontier report as `robots_disallowed`.
+
+## Validation notes (2026-09-25, branch `feature/002-r11-portal-agnostic-safety`)
+
+Run with Chromium libraries from the session scratchpad (`LD_LIBRARY_PATH`, see the 2026-09-24
+session dump); without them the browser suites skip.
+
+| Section | Where it is checked | Result |
+|---|---|---|
+| §1 Unit suites | `pnpm --dir apps/crawler test` (44 files) | 612/612 pass; `typecheck` and `lint` clean. `crawler/tests/stabilizer.test.ts` "finite CSS animation" failed once under full-suite load and passed 3/3 alone (timing-based, unchanged by this feature) |
+| §1 SC-002 | `safety/tests/robots.test.ts` on `tests/fixtures/urls/uniqa-robots-sample.json` | 50/50 URLs match the manual reading, all 9 `cHash` links refused |
+| §2 SC-001 | `mcp-server/tests/insurer-run.test.ts` | 5 consecutive runs, 0 requests to `*cHash*`, `/quote/` (except `/quote/start`) or `/api/`; `allow_and_record` variant passes |
+| §3 SC-003 | same file | 404 → `no_rules`; 503 and redirect loop → `ROBOTS_UNAVAILABLE` well under 5 s, only robots.txt requested, no run row |
+| §4 SC-004, SC-007 | same file (portal and persona written by the test); `mcp-server/tests/no-portal-names.test.ts` | insurer mapped with YAML only; no portal id or domain in `packages/*/src` or `.claude/agents` |
+| §5 SC-008, SC-009 | `mcp-server/tests/workspaces.test.ts`, `core/tests/portal-data.test.ts` | identical cookie page = two states; export holds one portal only; delete leaves the other portal byte-identical and resumable; CLIs smoke-tested on a scratch root (exit 1 without runs, dry run without `--yes`) |
+| §6 live uniqa | not run | waits for spec 001 T072 (compliance sign-off by the user) |
