@@ -14,9 +14,9 @@ environment: production # required to unlock a run against this address (FR-005)
 #   no clause on bots or automated access; it forbids further distribution ("dalsze rozpowszechnianie")
 #   of the content without consent. We map structure and do not republish content.
 compliance:
-  robots_checked_on: null
-  terms_reviewed_on: null
-  terms_reviewed_by: null
+  robots_checked_on: 2026-09-25
+  terms_reviewed_on: 2026-09-25
+  terms_reviewed_by: Randal Chopirik
 
 scope:
   # www only: form.uniqa.pl (calculators), zgloszenia.uniqa.pl (claims), fundusze.uniqa.pl and the
@@ -54,7 +54,7 @@ rate_limit:
   requests_per_second: 1
   max_concurrency: 1
   # TODO(T072): replace the placeholder contact address with the maintainer's real one.
-  user_agent: "PathfinderAI-Crawler/0.1 (+contact@example.com)"
+  user_agent: "PathfinderAI-Crawler/0.1 (randal14@wp.pl)"
 
 item_view_cap: 10 # FR-024: articles share one template per section
 item_route_templates:
