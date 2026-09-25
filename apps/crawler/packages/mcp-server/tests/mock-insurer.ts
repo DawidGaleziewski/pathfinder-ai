@@ -1,6 +1,7 @@
 import { createServer, type IncomingMessage, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import type { LoggedRequest, MockPortal } from './mock-portal.js';
+import { SHARED_COOKIE_PAGE } from './shared-pages.js';
 
 /**
  * A second, non-marketplace mock portal (spec 002 FR-020, research §12): an insurer with a
@@ -29,9 +30,6 @@ export const INSURER_ROBOTS = [
   'Sitemap: /sitemap.xml',
   '',
 ].join('\n');
-
-/** Identical on both mock portals (spec 002 US5 scenario 3). */
-export const SHARED_COOKIE_PAGE = `<!doctype html><html lang="pl"><head><meta charset="utf-8"><title>Pliki cookie</title></head><body><main><h1>Pliki cookie</h1><p>Ta strona używa plików cookie.</p></main></body></html>`;
 
 const layout = (
   title: string,
