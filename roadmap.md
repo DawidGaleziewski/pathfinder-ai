@@ -170,6 +170,16 @@ Status: `todo`, `in progress`, `done`. Last reviewed: 2026-10-02.
     is what reaches them.
   - Unexplained: `/faq` and `/ubezpieczenia/dom` got the same cluster id; each state reports its
     form only on the first visit (`forms: 0` on revisits). Not investigated.
+- R-13, BA server built (2026-10-03): T009–T028 done, so 31 of T001–T032; only T032's BA half is open.
+  `@pathfinder/docs` has keys, the status engine, the relation table, the observed rule, evidence
+  resolution, the audit and a fixture store; `@pathfinder/mcp-server` has a second entry `ba-main.ts`
+  serving 13 `pathfinder-ba` tools (reads, sessions, record writes in one transaction each);
+  `pnpm docs:audit [<portal>] --env <env>` prints a JSON report and exits 1 on findings. `.mcp.json`
+  lists `pathfinder-ba` on `PATHFINDER_ENV=sandbox`. To close R-13: open a new Claude Code session
+  (MCP servers load at session start), run the `ba` agent on run `01a0fe67-…`, then
+  `pnpm docs:audit reference-insurer --env sandbox`, and record the session id, record counts by
+  kind and the FUPs here. Deviations and open points are in
+  `session_dump/2026-10-03-r13-ba-server-built.md`.
 - R-18 added 2026-10-02 at the user's request, to discuss later; nothing is decided or specified.
   Starting points: (1) the crawler already records page-made `xhr`/`fetch` calls as method, path
   template, status and body shapes linked to the triggering action
