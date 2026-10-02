@@ -98,6 +98,11 @@ Gaps:
     that on 2026-10-02; the file was not edited.
 21. T015 seeds network calls in the fixture although the real reference portal makes none, as you
     asked ("follow as written").
+22. **My mistake, corrected:** commit `30c9a8b` picked up two empty files,
+    `.claude-trace/log-2026-10-02-22-13-*.jsonl`, through `git add -A`. Something outside this work
+    created them during the session (0 bytes each, no content). The next commit takes them out of the
+    repo again and leaves them on disk; they stay in the history of `30c9a8b`. `.claude-trace/` is
+    not in `.gitignore`; I did not add it, since that is your call.
 
 ## Things that cost time, for the next session
 
