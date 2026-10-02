@@ -11,7 +11,7 @@
         "start"
       ],
       "env": {
-        "PATHFINDER_ENV": "production"
+        "PATHFINDER_ENV": "sandbox"
       }
     }
   }
