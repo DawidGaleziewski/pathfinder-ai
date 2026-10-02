@@ -203,7 +203,11 @@ Status: `todo`, `in progress`, `done`. Last reviewed: 2026-10-02.
     other entry points from snapshot links. BR-008, BR-011 and BR-013 are inferred from instruction
     text only, with no recorded enforcement.
   - Changed after the session, at the user's request: `withdraw_record` on a follow-up now sets an
-    `open` task to `cancelled`; `.claude-trace/` is in `.gitignore`.
+    `open` task to `cancelled`; `.claude-trace/` is in `.gitignore`. The BA skill now gives the
+    `seen_in`, NFR category and `measured` shapes, says to page `get_run_evidence` with the default
+    limit until `next_cursor` is null, and to keep ids out of prose; the tool's `limit` description
+    says to leave it unset. The records from session `01a0feb6-…` were written from 20 of 195 edges;
+    a second BA session on the same run should revise the screen entry points from the full list.
 - R-18 added 2026-10-02 at the user's request, to discuss later; nothing is decided or specified.
   Starting points: (1) the crawler already records page-made `xhr`/`fetch` calls as method, path
   template, status and body shapes linked to the triggering action
