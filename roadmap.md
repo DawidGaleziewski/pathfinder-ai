@@ -180,6 +180,30 @@ Status: `todo`, `in progress`, `done`. Last reviewed: 2026-10-02.
   `pnpm docs:audit reference-insurer --env sandbox`, and record the session id, record counts by
   kind and the FUPs here. Deviations and open points are in
   `session_dump/2026-10-03-r13-ba-server-built.md`.
+- T032, BA half (2026-10-03): `ba` agent session `01a0feb6-2b98-7000-b44d-e992133d03f9` on run
+  `01a0fe67-…`, status `completed`, all seven passes recorded. `pnpm docs:audit reference-insurer
+  --env sandbox` exits 0: 100 records, 104 revisions, 253 evidence links, no findings. T032 is `[X]`,
+  so R-13 is at 32 of 32; not merged, the user tests the whole flow first.
+  - Records by kind, all `draft`, none withdrawn: 12 screens, 6 capabilities, 4 processes
+    (`map_only`), 16 business rules, 8 requirements, 18 data items, 16 glossary terms, 3 NFRs,
+    6 assumptions, 7 open questions, 4 follow-ups. No use cases (no trace run yet). The 4 extra
+    revisions are CAP-002..005, revised once to add their `contains` process relation.
+  - Follow-ups, all `open`, trace mode, guest persona, for T050: FUP-001 OC/AC calculator through all
+    four steps, plus one invalid `Kod pocztowy`; FUP-002 travel premium result, plus a trip over
+    90 days and a return before departure; FUP-003 comparison result, plus the same product chosen
+    twice; FUP-004 contact enquiry confirmation, plus neither `Telefon` nor `E-mail` filled (needs a
+    run whose ceiling allows the POST).
+  - All 3 crawler open questions are `addressed` (by FUP-001, FUP-003, ASM-004); both rule candidates
+    are cited by BR-015. No pending feedback existed.
+  - What the BA hit: `record-kinds.md` in the BA skill does not give the `data_item.seen_in` shape
+    (`{kind: form|network_call, target_id}`), the NFR category spelling `localisation`, or that
+    `measured.value` is a string; each cost a `SCHEMA_INVALID` round. `finish_session` refused the
+    summary as `PII_SUSPECTED` until the run id was taken out of it. `get_run_evidence` for edges at
+    limit 200 exceeded the agent's output limit, so it read 20 of 195 edges (all from `/`) and took
+    other entry points from snapshot links. BR-008, BR-011 and BR-013 are inferred from instruction
+    text only, with no recorded enforcement.
+  - Changed after the session, at the user's request: `withdraw_record` on a follow-up now sets an
+    `open` task to `cancelled`; `.claude-trace/` is in `.gitignore`.
 - R-18 added 2026-10-02 at the user's request, to discuss later; nothing is decided or specified.
   Starting points: (1) the crawler already records page-made `xhr`/`fetch` calls as method, path
   template, status and body shapes linked to the triggering action
