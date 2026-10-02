@@ -46,7 +46,14 @@ denylist:
   # entry before the first live run.
 
 obstacles:
-  # Cookiebot consent dialog; the guest persona declines optional consent, so the handler clicks "Odrzuć".
+  # Cookiebot consent dialog. The live dialog (2026-09-30) offers only "Zarządzaj" and "Akceptuj
+  # wszystkie cookies", no "Odrzuć". The guest persona declines optional consent, so the handlers
+  # open "Zarządzaj" and then save the selection, whose optional categories are off by default.
+  - id: cookie_banner_manage
+    selector: "#CybotCookiebotDialogBodyLevelButtonCustomize"
+  - id: cookie_banner_save_selection
+    selector: "#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowallSelection"
+  # Kept in case the dialog is reconfigured to show a decline button; costs nothing when absent.
   - id: cookie_banner
     selector: "#CybotCookiebotDialogBodyButtonDecline"
 
